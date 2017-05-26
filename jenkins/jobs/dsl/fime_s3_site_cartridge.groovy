@@ -50,7 +50,7 @@ doa17PullCode.with{
       events{
         refUpdated()
       }
-      project("${PROJECT_NAME"}/" + siteRepoName, 'master')
+      project("${PROJECT_NAME}/" + siteRepoName, 'master')
     }
   }
   scm{
