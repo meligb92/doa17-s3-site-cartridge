@@ -5,7 +5,7 @@ def projectFolderName = "${PROJECT_NAME}"
 // Variables
 def siteRepoName = "doa17-static-page"
 def siteRepoUrl = "ssh://jenkins@gerrit:29418/${PROJECT_NAME}/" + siteRepoName
-def doa17BucketName = "doa17-name-bucket"
+def doa17BucketName = "doa17-meligb92-bucket"
 
 // Views
 def doa17SitePipeline = buildPipelineView(projectFolderName + "/DOA17_S3_Site_Pipeline")
@@ -33,12 +33,35 @@ doa17PullCode.with{
     env('WORKSPACE_NAME', workspaceFolderName)
     env('PROJECT_NAME', projectFolderName)
   }
+  parameters{
+    stringParam("S3_BUCKET",doa17BucketName,"AWS S3 Bucket Name")
+    stringParam("AWS_REGION",'',"AWS Region")
+    stringParam("AWS_ACCES_KEY",'',"AWS Access Key")
+    stringParam("AWS_SECRET_KEY",'',"AWS Secret Key")
+  }
   wrappers {
     preBuildCleanup()
     maskPasswords()
     sshAgent("adop-jenkins-master")
   }
   label("docker")
+  triggers{
+    gerrit{
+      events{
+        refUpdated()
+      }
+      project("${PROJECT_NAME"}/" + siteRepoName, 'master')
+    }
+  }
+  scm{
+    git{
+      remote{
+        url(siteRepoUrl)
+        credentials("adop-jenkins-master")
+      }
+      branch("*/master")
+    }
+  }
   publishers{
     downstreamParameterized{
       trigger(projectFolderName + "/DOA17_Create_Bucket"){
@@ -57,6 +80,12 @@ doa17CreateBucket.with{
   environmentVariables {
     env('WORKSPACE_NAME', workspaceFolderName)
     env('PROJECT_NAME', projectFolderName)
+  }
+  parameters{
+    stringParam("S3_BUCKET",'',"AWS S3 Bucket Name")
+    stringParam("AWS_REGION",'',"AWS Region")
+    stringParam("AWS_ACCES_KEY",'',"AWS Access Key")
+    stringParam("AWS_SECRET_KEY",'',"AWS Secret Key")
   }
   wrappers {
     preBuildCleanup()
@@ -92,6 +121,5 @@ doa17DeploySite.with{
     preBuildCleanup()
     maskPasswords()
   }
-  label("docker")
-  }
-}
+  label("docker") 
+} 
